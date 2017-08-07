@@ -196,7 +196,7 @@ class ScrollingTextView : View {
             curItem = -trunc(o)
         }
 
-        Log.i(TAG, "offset:$mOffset  itemHeight:$itemHeight  o:$o  n:$n  start:$start  curItem:$curItem")
+//        Log.i(TAG, "offset:$mOffset  itemHeight:$itemHeight  o:$o  n:$n  start:$start  curItem:$curItem")
 
 //        val tail = (mOffset / itemHeight) % textList!!.size
 //        if (tail < 0)
@@ -211,13 +211,14 @@ class ScrollingTextView : View {
 //            ih = (itemHeight * 1.2f).toInt()
 //        } else if (mTextLineSpace != 0) ih = itemHeight + mTextLineSpace
 
-        while (remainingSpace > 0 && index < size + 2) {
-            val s = textList!![(curItem++) % size]
+        while (index < size) {
+            val s = textList!![(curItem) % size]
             val textLen = textPaint.measureText(s)
-            val y = start + (index * ih) % measuredHeight
+            val y = start + (index * ih)
             canvas.drawText(s, width / 2 - textLen / 2, y, textPaint)
-            remainingSpace -= itemHeight
+            remainingSpace = (remainingSpace - itemHeight + start).toInt()
             index++
+            curItem++
         }
     }
 
