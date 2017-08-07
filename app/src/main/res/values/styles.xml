@@ -12,5 +12,7 @@
         <attr name="text_size" format="dimension"/>
         <attr name="text_color" format="color"/>
         <attr name="text_lines" format="integer"/>
+        <attr name="default_line_space" format="boolean" />
+        <attr name="line_space" format="dimension" />
     </declare-styleable>
 </resources>

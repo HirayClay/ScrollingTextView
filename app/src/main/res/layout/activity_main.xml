@@ -17,9 +17,9 @@
 
     <io.hirayclay.scrollingtextview.ScrollingTextView
         android:id="@+id/scrolling_textview"
-        android:layout_width="100dp"
+        android:layout_width="150dp"
         app:text_size="19sp"
         app:text_color="@color/colorAccent"
         app:text_lines="5"
-        android:layout_height="100dp" />
+        android:layout_height="300dp" />
 </LinearLayout>
