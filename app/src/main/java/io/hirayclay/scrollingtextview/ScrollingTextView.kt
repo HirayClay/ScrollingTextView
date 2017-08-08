@@ -1,15 +1,14 @@
 package io.hirayclay.scrollingtextview
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.support.v4.view.MotionEventCompat
 import android.support.v4.view.VelocityTrackerCompat
 import android.support.v4.widget.ScrollerCompat
 import android.text.TextPaint
-import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -17,6 +16,7 @@ import android.view.VelocityTracker
 import android.view.View
 import android.view.View.MeasureSpec.AT_MOST
 import android.view.ViewConfiguration
+import android.view.animation.AccelerateDecelerateInterpolator
 
 /**
  * Created by CJJ on 2017/8/4.
@@ -32,6 +32,13 @@ class ScrollingTextView : View {
 
     var textList: List<String>? = null
     var mOffset = 0
+        get() {
+            return field
+        }
+        set(value) {
+            field = value
+            invalidate()
+        }
     lateinit var textPaint: TextPaint
     var mHasDefaultLineSpace: Boolean = true
     var mTextLineSpace = 0
@@ -93,22 +100,24 @@ class ScrollingTextView : View {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 pointerId = event.getPointerId(0)
-                Log.i(TAG, "DOWN PointerId:$pointerId")
                 lastY = event.y.toInt()
+//                Log.i(TAG, "down ")
             }
             MotionEvent.ACTION_MOVE -> {
                 mOffset += (event.y - lastY).toInt()
                 lastY = event.y.toInt()
                 invalidate()
+//                Log.i(TAG, "move ")
             }
             MotionEvent.ACTION_UP -> {
+//                Log.i(TAG, "up ")
                 lastY = 0
                 val vc = ViewConfiguration.get(context)
                 val maxVelocity = vc.scaledMaximumFlingVelocity
                 mVelocityTracker.computeCurrentVelocity(1000, maxVelocity.toFloat())
                 val yVel = VelocityTrackerCompat.getYVelocity(mVelocityTracker, pointerId)
                 if (yVel != 0f)
-                    mViewFlinger.fling(-yVel)
+                    mViewFlinger.fling(yVel)
             }
 
         }
@@ -128,14 +137,10 @@ class ScrollingTextView : View {
                 val y = scroller.currY
                 val dy = y - mLastFlingY
                 mLastFlingY = y
-                if (mOffset + dy < 0) {
-                    stop()
-                    return
-                }
                 mOffset += dy
-                postInvalidateOnAnimation()
+                invalidate()
                 continueAnimation()
-            }
+            } else stop()
 
         }
 
@@ -155,20 +160,13 @@ class ScrollingTextView : View {
         }
     }
 
-    private fun onPointerUp(event: MotionEvent) {
-//        val actionIndex = MotionEventCompat.getActionIndex(event)
-//        if (actionIndex == pointerId) {
-//            val newIndex = if (actionIndex == 0) 1 else 0
-//            pointerId = event.getPointerId(newIndex)
-//        }
-    }
-
     private var baseH = 0f
 
     private fun computeBaseInfo() {
         val fm = textPaint.fontMetrics
         itemHeight = (fm.bottom - fm.top).toInt()
         baseH = -fm.top
+        Log.i(TAG, "baseH:$baseH bottom:${fm.bottom}")
 //        headerSpace = measuredHeight / 2 - itemHeight / 2
         //anchor the pivot
         startBaseLine = (measuredHeight / 2 - fm.top).toInt()
@@ -188,15 +186,18 @@ class ScrollingTextView : View {
         var start = baseH
         val o = mOffset.toFloat() / itemHeight % textList!!.size
         val n = o % 1
-        if (n > 0) {
+        if (o > 0) {
             start = baseH - (1 - n) * itemHeight
-            curItem = (textList!!.size + trunc(o))
-        } else if (n < 0) {
+            curItem = (textList!!.size - trunc(o))
+        } else if (o < 0) {
             start = baseH + n * itemHeight
             curItem = -trunc(o)
+        } else {
+            curItem = (o.toInt() + textList!!.size) % textList!!.size
+            start = baseH
         }
 
-//        Log.i(TAG, "offset:$mOffset  itemHeight:$itemHeight  o:$o  n:$n  start:$start  curItem:$curItem")
+        Log.i(TAG, "offset:$mOffset  itemHeight:$itemHeight  o:$o       n:$n      start:$start     curItem:$curItem")
 
 //        val tail = (mOffset / itemHeight) % textList!!.size
 //        if (tail < 0)
@@ -224,9 +225,9 @@ class ScrollingTextView : View {
 
     fun trunc(f: Float): Int {
         if (f < 0)
-            return f.toInt() - 1
+            return f.toInt()
         if (f > 0)
-            return f.toInt() + 1
+            return f.toInt()
         return 0
     }
 
@@ -235,5 +236,16 @@ class ScrollingTextView : View {
         mVelocityTracker.recycle()
     }
 
+    fun reset(smooth: Boolean) {
+        if (!smooth) {
+            mOffset = 0
+            invalidate()
+        } else {
+            val animator = ObjectAnimator.ofInt(this, "mOffset", mOffset, 0).setDuration(400)
+            animator.interpolator = AccelerateDecelerateInterpolator()
+            animator.start()
+        }
+
+    }
 
 }
