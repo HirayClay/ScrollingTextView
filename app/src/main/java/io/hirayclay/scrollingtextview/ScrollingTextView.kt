@@ -17,6 +17,7 @@ import android.view.View
 import android.view.View.MeasureSpec.AT_MOST
 import android.view.ViewConfiguration
 import android.view.animation.AccelerateDecelerateInterpolator
+import io.hirayclay.scrollingtextview.BuildConfig.DEBUG
 
 /**
  * Created by CJJ on 2017/8/4.
@@ -99,6 +100,9 @@ class ScrollingTextView : View {
 //        val actionIndex = event.actionIndex
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                if (mViewFlinger.isFlinging())
+                    mViewFlinger.stop()
+
                 pointerId = event.getPointerId(0)
                 lastY = event.y.toInt()
 //                Log.i(TAG, "down ")
@@ -154,7 +158,11 @@ class ScrollingTextView : View {
             postOnAnimation(this@ViewFlinger)
         }
 
-        private fun stop() {
+        fun isFlinging(): Boolean {
+            return !scroller.isFinished
+        }
+
+        public fun stop() {
             removeCallbacks(this@ViewFlinger)
             scroller.abortAnimation()
         }
@@ -166,7 +174,8 @@ class ScrollingTextView : View {
         val fm = textPaint.fontMetrics
         itemHeight = (fm.bottom - fm.top).toInt()
         baseH = -fm.top
-        Log.i(TAG, "baseH:$baseH bottom:${fm.bottom}")
+        if (DEBUG)
+            Log.i(TAG, "baseH:$baseH bottom:${fm.bottom}")
 //        headerSpace = measuredHeight / 2 - itemHeight / 2
         //anchor the pivot
         startBaseLine = (measuredHeight / 2 - fm.top).toInt()
@@ -197,7 +206,8 @@ class ScrollingTextView : View {
             start = baseH
         }
 
-        Log.i(TAG, "offset:$mOffset  itemHeight:$itemHeight  o:$o       n:$n      start:$start     curItem:$curItem")
+        if (DEBUG)
+            Log.i(TAG, "offset:$mOffset  itemHeight:$itemHeight  o:$o       n:$n      start:$start     curItem:$curItem")
 
 //        val tail = (mOffset / itemHeight) % textList!!.size
 //        if (tail < 0)
