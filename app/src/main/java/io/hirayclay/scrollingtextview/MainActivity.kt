@@ -12,5 +12,6 @@ class MainActivity : AppCompatActivity() {
         scrolling_textview.bindText(arrayListOf("AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH", "JJJ", "KKK", "LLL", "MMM", "OOO"))
         quick_reset.setOnClickListener { scrolling_textview.reset(false) }
         smooth_reset.setOnClickListener { scrolling_textview.reset(true) }
+        fake_scroll.setOnClickListener { scrolling_textview.fakeScroll(10,300) }
     }
 }

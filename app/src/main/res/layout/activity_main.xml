@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:orientation="vertical"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="io.hirayclay.scrollingtextview.MainActivity">
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
 
         <Button
             android:id="@+id/quick_reset"
@@ -25,14 +25,21 @@
             android:layout_height="wrap_content"
             android:text="SmoothReset"
             android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/fake_scroll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FakeScroll"
+            android:textAllCaps="false" />
     </LinearLayout>
 
     <io.hirayclay.scrollingtextview.ScrollingTextView
         android:id="@+id/scrolling_textview"
-        android:layout_marginTop="30dp"
-        android:layout_gravity="center_horizontal"
         android:layout_width="150dp"
         android:layout_height="300dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
         app:text_color="@color/colorPrimary"
         app:text_lines="5"
         app:text_size="19sp" />

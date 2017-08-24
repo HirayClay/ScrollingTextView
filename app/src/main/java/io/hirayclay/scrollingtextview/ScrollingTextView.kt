@@ -1,5 +1,7 @@
 package io.hirayclay.scrollingtextview
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
@@ -54,6 +56,8 @@ class ScrollingTextView : View {
     var itemHeight = 0
     var lastY = 0
     var pointerId: Int = 0
+
+    var interrupt: Boolean = true
     lateinit var scroller: ScrollerCompat
     lateinit var mVelocityTracker: VelocityTracker
 
@@ -100,6 +104,12 @@ class ScrollingTextView : View {
 //        val actionIndex = event.actionIndex
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+
+                //check the fake scroll
+                if (interrupt && (animator!=null&&(animator!!.isRunning))) {
+                    animator!!.cancel()
+                }
+
                 if (mViewFlinger.isFlinging())
                     mViewFlinger.stop()
 
@@ -197,10 +207,10 @@ class ScrollingTextView : View {
         val n = o % 1
         if (o > 0) {
             start = baseH - (1 - n) * itemHeight
-            curItem = (textList!!.size - trunc(o))
+            curItem = (textList!!.size - o.toInt())
         } else if (o < 0) {
             start = baseH + n * itemHeight
-            curItem = -trunc(o)
+            curItem = -o.toInt()
         } else {
             curItem = (o.toInt() + textList!!.size) % textList!!.size
             start = baseH
@@ -233,12 +243,45 @@ class ScrollingTextView : View {
         }
     }
 
-    fun trunc(f: Float): Int {
-        if (f < 0)
-            return f.toInt()
-        if (f > 0)
-            return f.toInt()
-        return 0
+    var animator: ObjectAnimator? = null
+
+    fun brewAndStartAnimation(dur: Long, scrollX: Int) {
+        animator = ObjectAnimator.ofInt(this, "mOffset", mOffset, mOffset + scrollX)
+                .setDuration(dur)
+        animator!!.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationCancel(animation: Animator?) {
+                interrupt = false
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                interrupt = false
+            }
+        })
+        animator!!.start()
+    }
+
+
+    /**use the method to simulate  scroll like triggered by user
+     * @param recycleCount
+     * @param durationPerCircle
+     */
+    fun fakeScroll(recycleCount: Int, durationPerCircle: Int) {
+        fakeScroll(recycleCount, durationPerCircle, true)
+    }
+
+    /**
+     * @param recycleCount
+     * @param durationPerCircle
+     * @param interrupt if the scroll can be interrupted when user touch the screen
+     */
+    fun fakeScroll(recycleCount: Int, durationPerCircle: Int, interrupt: Boolean) {
+        this.interrupt = interrupt
+        val scrollX = recycleCount * measuredHeight
+        val dur: Int
+        if (durationPerCircle > 0)
+            dur = durationPerCircle * recycleCount
+        else dur = recycleCount * 300
+        brewAndStartAnimation(dur.toLong(), scrollX)
     }
 
     override fun onDetachedFromWindow() {
@@ -251,7 +294,9 @@ class ScrollingTextView : View {
             mOffset = 0
             invalidate()
         } else {
-            val animator = ObjectAnimator.ofInt(this, "mOffset", mOffset, 0).setDuration(400)
+            val animator = ObjectAnimator
+                    .ofInt(this, "mOffset", mOffset, 0)
+                    .setDuration(400)
             animator.interpolator = AccelerateDecelerateInterpolator()
             animator.start()
         }
